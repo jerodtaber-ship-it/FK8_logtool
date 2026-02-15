@@ -1,0 +1,79 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8"/>
+  <title>Shared Report – FK8 Cobb Log Tool</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <link rel="manifest" href="/static/manifest.json">
+  <meta name="theme-color" content="#141418">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <link rel="apple-touch-icon" href="/static/icon-192.png">
+  <style>
+    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; margin: 32px; max-width: 1100px; }
+    .card { border: 1px solid #ddd; border-radius: 10px; padding: 18px; margin: 16px 0; }
+    .tag { display:inline-block; padding: 2px 8px; border-radius: 999px; border: 1px solid #ccc; margin-right: 6px; font-size: 12px;}
+    .sev-info { background: #f6f6f6; }
+    .sev-warn { background: #fff4cc; border-color:#f0c400; }
+    .sev-fail { background: #ffd6d6; border-color:#d33; }
+    img { max-width: 100%; height: auto; border: 1px solid #ddd; border-radius: 10px; padding: 6px; background: white; }
+    a { color: #0b57d0; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    .grid { display:grid; grid-template-columns: 1fr; gap: 12px; }
+    @media (min-width: 980px) { .grid { grid-template-columns: 1fr 1fr; } }
+    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; }
+  </style>
+</head>
+<body>
+  <h1>Shared FK8 Log Report</h1>
+  <p><b>File:</b> {{ filename }}</p>
+
+  <div class="card">
+    <b>Download:</b> <a href="{{ report_json_url }}">report.json</a>
+  </div>
+
+  {% for seg in segments %}
+    <div class="card">
+      <h2>Segment {{ seg.idx }} — {{ seg.kind }}</h2>
+
+      <h3>Findings</h3>
+      <ul>
+        {% for f in seg.findings %}
+          <li>
+            <span class="tag sev-{{ f.severity }}">{{ f.severity.upper() }}</span>
+            <b>{{ f.title }}</b> — {{ f.detail }}
+          </li>
+        {% endfor %}
+      </ul>
+
+      {% if seg.ranked %}
+        <h3>Likely causes (ranked) + next steps</h3>
+        <ol>
+          {% for c in seg.ranked %}
+            <li>
+              <b>{{ c.cause }}</b> (score {{ "%.1f"|format(c.score) }}) — {{ c.rationale }}
+              <ul>
+                {% for s in c.next_steps %}
+                  <li>{{ s }}</li>
+                {% endfor %}
+              </ul>
+            </li>
+          {% endfor %}
+        </ol>
+      {% endif %}
+
+      <h3>Plots</h3>
+      <div class="grid">
+        {% for p in plots %}
+          {% if p.segment == seg.idx %}
+            <div>
+              <div class="mono">{{ p.name }}</div>
+              <a href="{{ p.url }}"><img src="{{ p.url }}" alt="{{ p.name }}"></a>
+            </div>
+          {% endif %}
+        {% endfor %}
+      </div>
+    </div>
+  {% endfor %}
+</body>
+</html>
